@@ -1,0 +1,124 @@
+{% extends "base.html.twig" %}
+
+{% block  stylesheets %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="http://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css"
+          type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+{% endblock %}
+
+{% block  body %}
+    <div class="container mt-4 text-center">
+        <label><input type="radio"  name="scale" value="day" checked/><i class="material-icons">Day scale</i></label>
+        <label><input type="radio"  name="scale" value="week"/><i class="material-icons">Week scale</i></label>
+        <label><input type="radio"  name="scale" value="month"/><i class="material-icons">Month scale</i></label>
+        <label><input type="radio"  name="scale" value="year"/><i class="material-icons">Year scale</i></label>
+    </div>
+    {{ gantt_html(gantt) }}
+{% endblock %}
+
+{% block  javascripts %}
+    <script
+            src="http://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+    <script src="http://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.4/jquery-confirm.min.js"></script>
+    <script src="{{ asset('bundles/fosjsrouting/js/router.min.js') }}"></script>
+    <script src="{{ path('fos_js_routing_js', { callback: 'fos.Router.setData' }) }}"></script>
+
+    <script>
+
+        function setScaleConfig(level) {
+            switch (level) {
+                case "day":
+                    gantt.config.scale_unit = "day";
+                    gantt.config.step = 1;
+                    gantt.config.date_scale = "%d %M";
+                    gantt.templates.date_scale = null;
+
+                    gantt.config.scale_height = 27;
+
+                    gantt.config.subscales = [];
+                    break;
+                case "week":
+                    var weekScaleTemplate = function (date) {
+                        var dateToStr = gantt.date.date_to_str("%d %M");
+                        var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+                        return dateToStr(date) + " - " + dateToStr(endDate);
+                    };
+
+                    gantt.config.scale_unit = "week";
+                    gantt.config.step = 1;
+                    gantt.templates.date_scale = weekScaleTemplate;
+
+                    gantt.config.scale_height = 50;
+
+                    gantt.config.subscales = [
+                        {unit: "day", step: 1, date: "%D"}
+                    ];
+                    break;
+                case "month":
+                    gantt.config.scale_unit = "month";
+                    gantt.config.date_scale = "%F, %Y";
+                    gantt.templates.date_scale = null;
+
+                    gantt.config.scale_height = 50;
+
+                    gantt.config.subscales = [
+                        {unit: "day", step: 1, date: "%j, %D"}
+                    ];
+
+                    break;
+                case "year":
+                    gantt.config.scale_unit = "year";
+                    gantt.config.step = 1;
+                    gantt.config.date_scale = "%Y";
+                    gantt.templates.date_scale = null;
+
+                    gantt.config.min_column_width = 50;
+                    gantt.config.scale_height = 90;
+
+                    gantt.config.subscales = [
+                        {unit: "month", step: 1, date: "%M"}
+                    ];
+                    break;
+            }
+        }
+
+
+
+        $(function () {
+            setScaleConfig("year");
+            {{ gantt_js(gantt) }}
+
+            var els = document.querySelectorAll("input[name='scale']");
+            for (var i = 0; i < els.length; i++) {
+                els[i].onclick = function(e){
+                    e = e || window.event;
+                    var el = e.target || e.srcElement;
+                    var value = el.value;
+                    setScaleConfig(value);
+                    gantt.render();
+                };
+            }
+        });
+    </script>
+
+{% endblock %}
+
